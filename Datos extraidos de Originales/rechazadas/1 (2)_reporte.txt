@@ -1,0 +1,8 @@
+Factura rechazada: 1 (2).png
+Razón: RECHAZADA
+
+Errores:
+  - Resolución muy baja (768x1024)
+
+Advertencias:
+  - Brillo anormal (242.27)
