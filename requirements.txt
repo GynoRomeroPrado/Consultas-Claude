@@ -9,8 +9,13 @@ rapidfuzz>=3.5.0
 numpy>=1.24.0
 pandas>=2.0.0
 
-# Image processing (for PDF to image conversion if needed)
+# Image processing (FASE 1 + FASE 2)
 Pillow>=10.0.0
+opencv-python>=4.8.0  # Preprocesamiento de imagen (denoising, deskewing, binarización)
+
+# OCR (FASE 2 - Pipeline Híbrido)
+paddlepaddle>=2.5.0  # CPU version (para GPU: paddlepaddle-gpu)
+paddleocr>=2.7.0  # OCR robusto para PDFs rasterizados
 
 # JSON/XML handling (built-in, but for validation)
 jsonschema>=4.20.0
