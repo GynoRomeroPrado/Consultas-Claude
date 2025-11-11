@@ -395,6 +395,58 @@ def separar_campos_header_items(fields: Dict[str, Any]) -> Tuple[Dict, List[Dict
     return header_fields, items_list
 
 
+def dividir_header_en_chunks(
+    form_items: List[Dict[str, Any]],
+    max_tokens: int = 384
+) -> List[Dict[str, Any]]:
+    """
+    Divide header en múltiples chunks si excede límite de tokens.
+
+    Con 98 campos → ~268 elementos → ~536 tokens (excede 512)
+    Solución: Dividir en chunks de max 384 tokens (deja margen de seguridad)
+
+    Args:
+        form_items: Lista completa de items del header
+        max_tokens: Máximo de tokens por chunk (default: 384)
+
+    Returns:
+        Lista de chunks, cada chunk es dict con "form" y "chunk_id"
+
+    Ejemplo:
+        268 elementos → Chunk 0: 192 elementos (~384 tokens)
+                     → Chunk 1: 76 elementos (~152 tokens)
+    """
+    # Estimación conservadora: 2 tokens por item
+    # Cada item tiene: id, text, box, label, field_name, words, linking, page
+    tokens_por_item = 2
+
+    max_items_por_chunk = max_tokens // tokens_por_item
+
+    # Si cabe todo en un chunk, retornar como está
+    if len(form_items) <= max_items_por_chunk:
+        return [{
+            "form": form_items,
+            "chunk_id": 0,
+            "total_items": len(form_items)
+        }]
+
+    # Dividir en múltiples chunks
+    chunks = []
+    for i in range(0, len(form_items), max_items_por_chunk):
+        chunk_items = form_items[i:i+max_items_por_chunk]
+        chunk_id = i // max_items_por_chunk
+
+        chunks.append({
+            "form": chunk_items,
+            "chunk_id": chunk_id,
+            "total_items": len(chunk_items),
+            "start_item_id": form_items[i]['id'] if chunk_items else 0,
+            "end_item_id": form_items[min(i+max_items_por_chunk-1, len(form_items)-1)]['id'] if chunk_items else 0
+        })
+
+    return chunks
+
+
 # ============================================================================
 # FUNCIÓN PRINCIPAL MODIFICADA
 # ============================================================================
@@ -636,26 +688,66 @@ def procesar_documento_multipagina_separado(
             campos_encontrados_header.add(field_name)
             item_id += 1
 
-    # Guardar header
-    header_output = {
-        "form": form_items_header
-    }
+    # Dividir header en chunks si excede límite de tokens
+    header_chunks = dividir_header_en_chunks(form_items_header, max_tokens=384)
 
-    header_file = output_path / f"{pdf_name}_header.json"
-    with open(header_file, 'w', encoding='utf-8') as f:
-        json.dump(header_output, f, indent=2, ensure_ascii=False)
+    header_files = []
+    header_tokens_total = 0
 
-    archivos_generados.append(str(header_file))
-    tokens_por_pagina.append(len(form_items_header) * 5)  # Estimación
+    if len(header_chunks) == 1:
+        # Un solo chunk - guardar como antes
+        header_output = {
+            "form": header_chunks[0]['form']
+        }
+
+        header_file = output_path / f"{pdf_name}_header.json"
+        with open(header_file, 'w', encoding='utf-8') as f:
+            json.dump(header_output, f, indent=2, ensure_ascii=False)
+
+        archivos_generados.append(str(header_file))
+        header_files.append(f"{pdf_name}_header.json")
+        header_tokens_total = len(header_chunks[0]['form']) * 2
+
+        if verbose:
+            print(f"   ✅ Header guardado: {len(header_chunks[0]['form'])} items")
+            print(f"   Tokens estimados: {header_tokens_total}")
+
+    else:
+        # Múltiples chunks - guardar por separado
+        if verbose:
+            print(f"   ⚠️  Header excede 512 tokens, dividiendo en {len(header_chunks)} chunks...")
+
+        for chunk in header_chunks:
+            chunk_id = chunk['chunk_id']
+            chunk_form = chunk['form']
+
+            header_output = {
+                "form": chunk_form
+            }
+
+            header_file = output_path / f"{pdf_name}_header_chunk_{chunk_id}.json"
+            with open(header_file, 'w', encoding='utf-8') as f:
+                json.dump(header_output, f, indent=2, ensure_ascii=False)
+
+            archivos_generados.append(str(header_file))
+            header_files.append(f"{pdf_name}_header_chunk_{chunk_id}.json")
+
+            chunk_tokens = len(chunk_form) * 2
+            header_tokens_total += chunk_tokens
+
+            if verbose:
+                print(f"   ✅ Chunk {chunk_id}: {len(chunk_form)} items (~{chunk_tokens} tokens)")
+
+    tokens_por_pagina.append(header_tokens_total)
 
     componentes['header'] = {
         'pages': [0],
         'fields': len(campos_encontrados_header),
-        'file': f"{pdf_name}_header.json"
+        'chunks': len(header_chunks),
+        'files': header_files
     }
 
     if verbose:
-        print(f"   ✅ Header guardado: {len(form_items_header)} items")
         print(f"   Campos encontrados: {len(campos_encontrados_header)}/{len(header_fields)}")
 
     # ========================================================================

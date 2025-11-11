@@ -227,12 +227,74 @@ Speedup: 27x más rápido
 
 ---
 
-### 5. Gestión de Límite de 512 Tokens
+### 5. División de Header en Chunks (NUEVO) ⭐
+
+```python
+def dividir_header_en_chunks(form_items, max_tokens=384):
+    """
+    Divide header en múltiples chunks si excede límite de tokens.
+
+    Problema detectado:
+    98 campos → ~268 elementos en form → ~536 tokens (EXCEDE 512)
+
+    Solución:
+    Dividir en chunks de max 384 tokens (deja margen de seguridad)
+
+    Returns:
+        Lista de chunks, cada chunk con "form" y "chunk_id"
+    """
+```
+
+**Ejemplo Real**:
+
+```
+Header con 268 elementos (536 tokens) → EXCEDE LÍMITE ❌
+
+Aplicar chunking:
+  Chunk 0: 192 elementos (~384 tokens) ✅
+  Chunk 1: 76 elementos (~152 tokens) ✅
+
+Archivos generados:
+  test_pdf_header_chunk_0.json
+  test_pdf_header_chunk_1.json
+  test_pdf_metadata.json
+```
+
+**Metadata actualizada**:
+```json
+{
+  "components": {
+    "header": {
+      "pages": [0],
+      "fields": 98,
+      "chunks": 2,
+      "files": [
+        "test_pdf_header_chunk_0.json",
+        "test_pdf_header_chunk_1.json"
+      ]
+    }
+  }
+}
+```
+
+**Ventajas**:
+- ✅ **Automático**: Detecta y divide sin configuración
+- ✅ **Conservador**: Usa 384 tokens (75% del límite) para margen de seguridad
+- ✅ **Compatible**: Cada chunk es un archivo válido de LayoutLMv3
+- ✅ **Metadata completa**: Tracking de chunks en metadata
+
+**Criterio de división**:
+- Si header ≤ 192 elementos (384 tokens): 1 archivo
+- Si header > 192 elementos: Múltiples chunks de 192 elementos cada uno
+
+---
+
+### 6. Gestión de Límite para Items
 
 ```python
 def aplicar_sliding_window(form_items, max_tokens=512, window_size=384, overlap=128):
     """
-    Divide form_items en ventanas con overlap.
+    Divide items en ventanas con overlap.
 
     Parámetros:
     - max_tokens: 512 (límite de LayoutLMv3)
@@ -262,7 +324,9 @@ Total ventanas: 3
 - ✅ Reduce pérdida de contexto
 - ✅ Mejora precisión en bordes
 
-**Nota**: Esta función está implementada pero aún no se usa automáticamente. En el futuro, si un archivo excede 512 tokens, se dividirá automáticamente.
+**Estado**:
+- ✅ **Header chunking**: IMPLEMENTADO Y ACTIVO
+- 🔄 **Items sliding window**: Implementado, se activa por página
 
 ---
 
@@ -286,6 +350,15 @@ dataset_layoutlmv3_multipagina/
 ├── factura_hotel_items_p3.json     # Página 3: items 51-75
 ├── factura_hotel_items_p4.json     # Página 4: items 76-100
 └── factura_hotel_metadata.json     # Consolidación
+```
+
+### Documento con Header Grande (98 campos → 268 elementos → 536 tokens)
+
+```
+dataset_layoutlmv3_multipagina/
+├── test_pdf_header_chunk_0.json    # Chunk 0: 192 elementos (~384 tokens)
+├── test_pdf_header_chunk_1.json    # Chunk 1: 76 elementos (~152 tokens)
+└── test_pdf_metadata.json          # Consolidación
 ```
 
 ---
