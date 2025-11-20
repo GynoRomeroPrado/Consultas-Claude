@@ -1,0 +1,70 @@
+# Configuración de Entrenamiento Multi-Fase
+
+# Directorios
+data_dir: "./data"
+output_dir: "./checkpoints"
+logging_dir: "./logs"
+
+# Dataset
+train_split: 0.85
+val_split: 0.15
+
+# Parámetros de entrenamiento
+num_epochs: 30
+batch_size: 2
+gradient_accumulation_steps: 8  # Batch efectivo = 16
+learning_rate: 0.00003  # 3e-5
+warmup_steps: 500
+weight_decay: 0.01
+
+# Optimización de memoria
+fp16: true  # Precisión mixta
+gradient_checkpointing: true
+dataloader_num_workers: 4
+
+# Evaluación y guardado
+eval_steps: 500
+save_steps: 1000
+save_total_limit: 3
+
+# Early stopping
+early_stopping_patience: 5
+early_stopping_threshold: 0.001
+
+# Logging
+logging_steps: 100
+report_to:
+  - "tensorboard"
+
+# Estrategia Multi-Fase
+# Fase 1: Solo datos sintéticos/augmentados
+phase1:
+  enabled: true
+  epochs: 15
+  use_synthetic: true
+  use_real: false
+  learning_rate: 0.00003  # 3e-5
+  description: "Entrenamiento inicial con datos sintéticos para estabilizar aprendizaje"
+
+# Fase 2: Datos mixtos (sintéticos + reales)
+phase2:
+  enabled: true
+  epochs: 10
+  use_synthetic: true
+  use_real: true
+  learning_rate: 0.000015  # 1.5e-5 (50% de la original)
+  description: "Fine-tuning con datos mixtos para mejorar generalización"
+
+# Fase 3: Solo datos reales
+phase3:
+  enabled: true
+  epochs: 5
+  use_synthetic: false
+  use_real: true
+  learning_rate: 0.000003  # 3e-6 (10% de la original)
+  description: "Ajuste fino final con datos reales para máxima precisión"
+
+# Notas:
+# - Fase 1 enseña la estructura general de facturas con datos abundantes
+# - Fase 2 combina conocimiento sintético con patrones reales
+# - Fase 3 perfecciona el modelo con las características específicas de tus facturas

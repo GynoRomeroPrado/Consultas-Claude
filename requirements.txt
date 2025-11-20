@@ -1,38 +1,45 @@
-# Core PDF extraction
-PyMuPDF>=1.23.0
-pdfplumber>=0.10.0
+# Deep Learning Framework
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.30.0
+accelerate>=0.20.0
 
-# Fuzzy matching
-rapidfuzz>=3.5.0
+# Computer Vision
+opencv-python>=4.8.0
+opencv-contrib-python>=4.8.0
+Pillow>=10.0.0
+scikit-image>=0.21.0
 
-# Data manipulation
+# Data Augmentation
+augraphy>=8.0.0
+
+# Model Optimization
+onnx>=1.14.0
+onnxruntime>=1.15.0
+optimum>=1.12.0
+
+# Validation
+python-stdnum>=1.19
+
+# Data Processing
 numpy>=1.24.0
 pandas>=2.0.0
+scipy>=1.11.0
 
-# Image processing (FASE 1 + FASE 2)
-Pillow>=10.0.0
-opencv-python>=4.8.0  # Preprocesamiento de imagen (denoising, deskewing, binarización)
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
 
-# OCR (FASE 2 - Pipeline Híbrido)
-paddlepaddle>=2.5.0  # CPU version (para GPU: paddlepaddle-gpu)
-paddleocr>=2.7.0  # OCR robusto para PDFs rasterizados
-
-# JSON/XML handling (built-in, but for validation)
-jsonschema>=4.20.0
-
-# Progress bars and CLI
+# Utilities
 tqdm>=4.65.0
-click>=8.1.0
-
-# Logging
-colorlog>=6.7.0
+pyyaml>=6.0
+python-dotenv>=1.0.0
+datasets>=2.14.0
 
 # Testing
 pytest>=7.4.0
 pytest-cov>=4.1.0
 
-# Type hints
-typing-extensions>=4.8.0
-
-# Optional: Visualization
-matplotlib>=3.7.0
+# Notebook
+jupyter>=1.0.0
+ipywidgets>=8.0.0

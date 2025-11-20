@@ -1,0 +1,50 @@
+# Configuración del Modelo Donut para Facturas Peruanas
+
+# Información del modelo base
+model_name: "naver-clova-ix/donut-base"
+
+# Configuración de imagen (alta resolución)
+image_size:
+  width: 1920
+  height: 2560
+align_long_axis: true
+
+# Encoder (Swin Transformer)
+encoder:
+  hidden_size: 768
+  num_layers: 12
+  num_heads: 12
+  window_size: 7
+  patch_size: 4
+
+# Decoder (BART)
+decoder:
+  hidden_size: 1024
+  num_layers: 4
+  num_heads: 16
+  max_length: 768
+
+# Embeddings posicionales
+interpolate_position_embeddings: true
+position_embedding_type: "bicubic"  # bicubic o bilinear
+
+# Esquema JSON de salida (claves cortas para eficiencia)
+output_schema:
+  ruc_emisor: "ruc_e"
+  razon_social: "rs"
+  ruc_receptor: "ruc_r"
+  fecha_emision: "fec"
+  numero_factura: "num"
+  serie: "ser"
+  subtotal: "sub"
+  igv: "igv"
+  total: "tot"
+  items:
+    - descripcion: "d"
+      cantidad: "q"
+      precio_unitario: "pu"
+      valor_total: "vt"
+
+# Regularización
+dropout: 0.1
+attention_dropout: 0.1

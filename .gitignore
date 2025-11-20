@@ -20,45 +20,44 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
+# Virtual Environment
 venv/
 env/
 ENV/
-.venv
 
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.DS_Store
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# Output directories
-output/
-results/
-annotations/
+# Data
+data/raw/*
+data/augmented/*
+data/processed/*
+!data/raw/.gitkeep
+!data/augmented/.gitkeep
+!data/processed/.gitkeep
+
+# Model checkpoints
+checkpoints/
+*.pth
+*.pt
+*.onnx
+*.bin
 
 # Logs
-*.log
 logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Temporary files
 *.tmp
-*.temp
-tmp/
-
-# PDF and JSON test files (keep sample files)
-*.pdf
-*.json
-!tests/test_data/sample.json
-
-# OS
-Thumbs.db
-.DS_Store
+*.bak
